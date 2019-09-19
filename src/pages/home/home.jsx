@@ -136,7 +136,6 @@ class Home extends React.Component{
     }
     this.timer = setTimeout(()=>{
       // console.log(dom, -dom.top + 1000 , dom.height);
-      
       if(-dom.top + 1000 > dom.height){
         this.page++
         this.getVideoList();

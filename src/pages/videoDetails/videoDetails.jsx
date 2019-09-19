@@ -1,6 +1,6 @@
 import React from 'react';
 import './videoDetails.scss'
-import {  Icon, Avatar } from 'antd';
+import {  Icon, Avatar, Row, Col } from 'antd';
 import { withRouter } from 'react-router-dom'
 import axios from 'axios';
 
@@ -16,6 +16,9 @@ class VideoDetails extends React.Component{
       text: null,
       commentList: []
     };
+    this.timer = null;
+    this.page = 1;
+    this.isEnd = false;
   }
 
   componentDidMount() {   
@@ -23,24 +26,44 @@ class VideoDetails extends React.Component{
     if(!query){
       return this.props.history.push('/home')
     }
-    this.getCommentList(query.id);
-
     this.setState({
       url: query.url,
       id: query.id,
       name: query.name,
       text: query.text
     });
+    setTimeout(()=>{
+      this.getCommentList();
+    },200);
+    window.addEventListener('scroll',this.loadmore,false);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll',this.loadmore,false);
+  }
+
+  loadmore = ()=>{
+    const dom = this.refs.video.getBoundingClientRect();
+    if(this.timer){
+      clearTimeout(this.timer);
+    }
+    this.timer = setTimeout(()=>{
+      if( (-dom.top + 1000 > dom.height) && !this.isEnd){
+        this.page++
+        this.getCommentList();
+      }
+    },200);
   }
 
   getCommentList = (id)=>{
-    axios.get(`/apis/api/api_open.php?a=dataList&c=comment&data_id=${ id }&page=1&lastcid=`).then(res=>{
+    axios.get(`/apis/api/api_open.php?a=dataList&c=comment&data_id=${ this.state.id }&page=${ this.page }`).then(res=>{
       const data = res.data;
-      console.log(data); 
       if(data && data.data){
         this.setState({
-          commentList: data.data
+          commentList: [...this.state.commentList,...data.data]
         })
+      } else {
+        this.isEnd = true;
       }
     })
   }
@@ -49,9 +72,23 @@ class VideoDetails extends React.Component{
     this.props.history.push('/home')
   }
 
+  handleLike = (it)=>{
+    let  list = this.state.commentList.slice();
+    list.map( item=>{
+      if( item.id === it.id){
+        it.like_count = it.color ? parseInt(it.like_count)-1 : parseInt(it.like_count)+1;
+        it.color = it.color ? '' : '#f95984';
+      }
+      return ''
+    });
+    this.setState({
+      commentList: list
+    })
+  }
+
   render () {
     return (
-      <div className="videoDetails-page">
+      <div className="videoDetails-page" ref="video">
         <div className="videoDetails-header flex-center">
           <Icon 
           onClick= {this.handleGoBack}
@@ -75,13 +112,25 @@ class VideoDetails extends React.Component{
             {
               this.state.commentList.map(it=>{
                 return(
-                  <div className="c-item flex-bt" key={ it.id }>
-                    <Avatar className="h-img" src={ it.user.profile_image } />
-                    <div className="flex-cl">
-                      <span>{ it.user.username }</span>
-                      <span>{ it.ctime }</span>
-                      <span>{ it.content }</span>
-                    </div>
+                  <div className="c-item" key={ it.id }>
+                    <Row gutter={16}>
+                      <Col  span={3}>
+                        <Avatar className="h-img" src={ it.user.profile_image } />
+                      </Col>
+                      <Col  span={16}>
+                        <div className="user-info">
+                          <span style={{ marginBottom: '1.5vw'}}>{ it.user.username }</span>
+                          <span style={{ marginBottom: '1.5vw'}}>{ it.ctime }</span>
+                          <span  style={{ lineHeight: '1.3'}}>{ it.content }</span>
+                        </div>
+                      </Col>
+                      <Col  span={5} onClick={ ()=> this.handleLike(it) }>
+                        <Icon type="like" style={{ fontSize: '4vw', color: it.color || '#ccc'}}/>
+                        <span style={{ marginLeft: '0.5vw'}}>{ it.like_count }</span>
+                      </Col>
+                    </Row>
+                    
+                    
                   </div>
                 )
               })
