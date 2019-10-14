@@ -9,8 +9,10 @@ $bg-color: #f7f7f7;
     overflow: hidden;
   }
   .home-header-cont{
+    position: relative;
     height: 9vh;
     background-color: $theme-color;
+    z-index: 999;
   }
   .search-cont{
     width: 40vw;
@@ -31,6 +33,15 @@ $bg-color: #f7f7f7;
         border-bottom: 2px solid $theme-color
       }
     }
+  }
+
+  .more-loading{
+    position: absolute; 
+    left: 50%;
+    width: 8vw; 
+    height: 8vw;
+    margin-left: -4vw;
+    z-index: 99;
   }
 
   .banner-item{

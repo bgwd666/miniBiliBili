@@ -5,6 +5,8 @@ import './App.css';
 import Home from './pages/home/home';
 import Login from './pages/login/login';
 import VideoDetails from './pages/videoDetails/videoDetails';
+sessionStorage.removeItem('videoList');
+sessionStorage.removeItem('pageInfo');
 
 function App() {
   return (

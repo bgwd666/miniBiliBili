@@ -52,20 +52,24 @@ export default class LeftDrawer extends React.Component{
             })
           }
         </div>
-        <div className="bottom-menu flex-ad">
-          <div>
-            <Icon type="setting" style={{ fontSize: '5vw', color: '#999' }}/>
-            <span className="b-m">设置</span>
-          </div>
-          <div>
-            <Icon type="skin" style={{ fontSize: '5vw', color: '#999' }}/>
-            <span className="b-m">主题</span>
-          </div>
-          <div>
-            <Icon type="star" style={{ fontSize: '5vw', color: '#999' }}/>
-            <span className="b-m">夜间</span>
-          </div>
-        </div>
+        {
+          this.props.visible && (
+            <div className="bottom-menu flex-ad">
+              <div>
+                <Icon type="setting" style={{ fontSize: '5vw', color: '#999' }}/>
+                <span className="b-m">设置</span>
+              </div>
+              <div>
+                <Icon type="skin" style={{ fontSize: '5vw', color: '#999' }}/>
+                <span className="b-m">主题</span>
+              </div>
+              <div>
+                <Icon type="star" style={{ fontSize: '5vw', color: '#999' }}/>
+                <span className="b-m">夜间</span>
+              </div>
+            </div>
+          )
+        }
       </Drawer>
     )
   }

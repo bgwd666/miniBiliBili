@@ -1,29 +1,29 @@
 import React from 'react';
 import './home.scss'
-import { Avatar , Affix , Icon , Carousel } from 'antd';
+import { Avatar , Affix , Icon , Carousel, Spin  } from 'antd';
 import LeftDrawer from '../../components/left-draw';
 import axios from 'axios';
 import { withRouter } from "react-router-dom";
+import { BackTop } from 'antd';
 
-class HeaderMenu extends React.Component{
-  render(){
-    return(
-      <Affix offsetTop={0}>
-        <div className="header-menu-cont flex-ad">
-          {
-            this.props.menuList.map(it=>{
-              return (
-                <div onClick={()=>this.props.changeMenu(it)}
-                className={`menu-item ${it === this.props.activeMenu ? 'active' : ''}`} key={it}>
-                  {it}
-                </div>
-              )
-            })
-          }
-        </div>
-      </Affix>
-    )
-  }
+function HeaderMenu(props){
+  return(
+    <Affix offsetTop={0}>
+      <div className="header-menu-cont flex-ad">
+        {
+          props.menuList.map(it=>{
+            return (
+              <div onClick={()=> props.changeMenu(it)}
+              className={`menu-item ${it === props.activeMenu ? 'active' : ''}`}
+              key={it}>
+                {it}
+              </div>
+            )
+          })
+        }
+      </div>
+    </Affix>
+  )
 }
 
 class Home extends React.Component{
@@ -114,29 +114,73 @@ class Home extends React.Component{
         'https://i0.hdslb.com/bfs/archive/62a5c4bd4c40ee15eb32b9c4c278e124b007045c.jpg@880w_440h.webp',
         'https://i0.hdslb.com/bfs/archive/92e663a2d83771d4e941fe89f2796d29a2a11f8c.jpg@880w_440h.webp'
       ],
-      videoList: []
+      videoList: [],
+      movedis: 'transleate(0)',
+      loading: false
     };
     this.timer = null;
+    this.maxtime = null;
     this.page = 1;
+    this.showMenu = true;
   }
   
-  componentDidMount(){   
-    this.getVideoList();
+  componentDidMount(){  
+    let disy = 0;
+    this.refs.app.addEventListener('touchmove',e=>{
+      disy = e.targetTouches[0].clientY;
+      disy = disy > 260 ? 260 : disy;
+      console.log(disy);
+      let lastTime = null;
+      if(new Date() - lastTime > 16) {
+        lastTime = new Date();
+        this.setState({
+          movedis: `translateY(${disy}px) rotate(${disy}deg)`
+        });
+      }
+    });
+    this.refs.app.addEventListener('touchend',e=>{
+      if(disy > 200) {
+
+      } 
+      this.setState({
+        movedis: `translateY(0) rotate(0)`
+      });
+    });
+    const list = JSON.parse(sessionStorage.getItem('videoList'));
+    const info = JSON.parse(sessionStorage.getItem('pageInfo'));
+    if(list && info){
+      this.setState({
+        videoList: list
+      });
+      this.page = info.page;
+      this.maxtime = info.maxtime;
+      setTimeout(() => {
+        window.scrollTo(0, info.top || 0)
+      }, 200);
+    } else {
+      this.getVideoList();
+    }
     window.addEventListener('scroll',this.loadmore,false);
   }
 
   componentWillUnmount() {
+    sessionStorage.setItem('videoList', JSON.stringify(this.state.videoList));
+    sessionStorage.setItem('pageInfo', JSON.stringify({
+      page: this.page,
+      maxtime: this.maxtime,
+      top: -this.refs.app.getBoundingClientRect().top
+    }));
     window.removeEventListener('scroll',this.loadmore,false);
   }
 
   loadmore = ()=>{
-    const dom = this.refs.app.getBoundingClientRect();
+    const dom = (this.refs.app&&this.refs.app.getBoundingClientRect()) || {};
     if(this.timer){
       clearTimeout(this.timer);
     }
     this.timer = setTimeout(()=>{
       // console.log(dom, -dom.top + 1000 , dom.height);
-      if(-dom.top + 1000 > dom.height){
+      if(-dom.top + 1000 > dom.height && !this.state.loading){
         this.page++
         this.getVideoList();
       }
@@ -144,14 +188,18 @@ class Home extends React.Component{
   }
 
   getVideoList = ()=>{
+    this.setState({
+      loading: true
+    });
     axios.get(`/apis/api/api_open.php?a=list&c=data&type=41&page=${this.page}&maxtime=${this.maxtime}`).then(res=>{
       const data = res.data;
-      console.log(data);
+      // console.log(data);
       this.maxtime = data.info.maxtime;
       const videoList = [...this.state.videoList,...data.list];
       this.setState({
-        videoList
-      })
+        videoList,
+        loading: false
+      });
     })
   }
 
@@ -190,6 +238,9 @@ class Home extends React.Component{
   render () {
     return (
       <div className={`app-home-page ${this.state.visible ? 'hidden' : ''}`}  ref="app">
+        <div className="more-loading" style={{ transform: this.state.movedis }}>
+           <img src={ require('../../img/loadMore.png') } width="100%" alt=""/>
+         </div>    
          <div className="home-header-cont flex-ad">
               <Avatar onClick={this.showDrawer} src="http://pic.qqtn.com/up/2017-12/2017120910404461943.jpg" />
               <div className="search-cont flex-bt">
@@ -199,6 +250,12 @@ class Home extends React.Component{
               <Icon type="mail" style={{ fontSize: '5vw', color: '#fff' }}/>
               <Icon type="edit" style={{ fontSize: '5vw', color: '#fff' }}/>
          </div>
+         <Affix offsetTop={50}>
+          <div className="loading-cont flex-center">
+            <Spin spinning={this.state.loading} />
+          </div>
+         </Affix>
+         <BackTop/>
          <LeftDrawer
             bindDom=".app-home-page"
             onClose={this.onClose}
