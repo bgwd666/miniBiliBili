@@ -1,5 +1,5 @@
 $theme-color: #f95984;
-$bg-color: #f7f7f7;
+$bg-color: #f7f7f7; 
 .app-home-page{
   position: relative;
   width: 100%;
@@ -12,7 +12,6 @@ $bg-color: #f7f7f7;
     position: relative;
     height: 9vh;
     background-color: $theme-color;
-    z-index: 999;
   }
   .search-cont{
     width: 40vw;
@@ -23,6 +22,7 @@ $bg-color: #f7f7f7;
   }
   .header-menu-cont{
     background-color: #fff;
+    z-index: 99;
     .menu-item{
       height: 10vw;
       line-height: 10vw;
@@ -30,18 +30,33 @@ $bg-color: #f7f7f7;
       transition: .1s;
       &.active{
         color: $theme-color;
-        border-bottom: 2px solid $theme-color
+        border-bottom: 2px solid $theme-color;
       }
     }
   }
 
   .more-loading{
     position: absolute; 
-    left: 50%;
+    right: 5vw;
+    top: 71vw;
     width: 8vw; 
     height: 8vw;
-    margin-left: -4vw;
-    z-index: 99;
+    z-index: 9;
+    border-radius: 50%;
+    border: 0.3vw solid $theme-color;
+    box-shadow: 0 0 1vw $theme-color;
+    &.loading{
+      animation: loading 0.5s linear infinite;
+    }
+  }
+
+  @keyframes loading {
+    0%{
+      transform: rotate(0);
+    }
+    100%{
+      transform: rotate(360deg);
+    }
   }
 
   .banner-item{

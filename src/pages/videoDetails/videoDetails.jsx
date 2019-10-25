@@ -1,7 +1,8 @@
 import React from 'react';
 import './videoDetails.scss'
-import {  Icon, Avatar, Row, Col } from 'antd';
+import {  Icon, Avatar, Row, Col, Spin, Affix } from 'antd';
 import { withRouter } from 'react-router-dom'
+import AddComment from './addComment'
 import axios from 'axios';
 
 
@@ -14,7 +15,8 @@ class VideoDetails extends React.Component{
       id: null,
       name: null,
       text: null,
-      commentList: []
+      commentList: [],
+      loading:  false
     };
     this.timer = null;
     this.page = 1;
@@ -55,13 +57,17 @@ class VideoDetails extends React.Component{
     },200);
   }
 
-  getCommentList = (id)=>{
+  getCommentList = ()=>{
+    this.setState({
+      loading: true
+    });
     axios.get(`/apis/api/api_open.php?a=dataList&c=comment&data_id=${ this.state.id }&page=${ this.page }`).then(res=>{
+      this.setState({ loading: false });
       const data = res.data;
       if(data && data.data){
         this.setState({
           commentList: [...this.state.commentList,...data.data]
-        })
+        });
       } else {
         this.isEnd = true;
       }
@@ -106,6 +112,11 @@ class VideoDetails extends React.Component{
         <p className="v-info">
         { this.state.text }
         </p>
+        <Affix offsetTop={50} target={ ()=>this.refs.video }>
+          <div className="loading-cont flex-center">
+            <Spin spinning={this.state.loading} />
+          </div>
+        </Affix>
         <div className="comment-cont">
           <h3 className="c-title">评论</h3>
           <div className="list-cont">
@@ -128,15 +139,14 @@ class VideoDetails extends React.Component{
                         <Icon type="like" style={{ fontSize: '4vw', color: it.color || '#ccc'}}/>
                         <span style={{ marginLeft: '0.5vw'}}>{ it.like_count }</span>
                       </Col>
-                    </Row>
-                    
-                    
+                    </Row> 
                   </div>
                 )
               })
             }
           </div>
         </div>
+        <AddComment/>
       </div>
     );
   }

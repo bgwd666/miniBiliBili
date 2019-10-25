@@ -8,7 +8,7 @@ import { BackTop } from 'antd';
 
 function HeaderMenu(props){
   return(
-    <Affix offsetTop={0}>
+    <Affix offsetTop={0} target={ ()=>props.target }>
       <div className="header-menu-cont flex-ad">
         {
           props.menuList.map(it=>{
@@ -115,37 +115,14 @@ class Home extends React.Component{
         'https://i0.hdslb.com/bfs/archive/92e663a2d83771d4e941fe89f2796d29a2a11f8c.jpg@880w_440h.webp'
       ],
       videoList: [],
-      movedis: 'transleate(0)',
       loading: false
     };
     this.timer = null;
     this.maxtime = null;
     this.page = 1;
-    this.showMenu = true;
   }
   
   componentDidMount(){  
-    let disy = 0;
-    this.refs.app.addEventListener('touchmove',e=>{
-      disy = e.targetTouches[0].clientY;
-      disy = disy > 260 ? 260 : disy;
-      console.log(disy);
-      let lastTime = null;
-      if(new Date() - lastTime > 16) {
-        lastTime = new Date();
-        this.setState({
-          movedis: `translateY(${disy}px) rotate(${disy}deg)`
-        });
-      }
-    });
-    this.refs.app.addEventListener('touchend',e=>{
-      if(disy > 200) {
-
-      } 
-      this.setState({
-        movedis: `translateY(0) rotate(0)`
-      });
-    });
     const list = JSON.parse(sessionStorage.getItem('videoList'));
     const info = JSON.parse(sessionStorage.getItem('pageInfo'));
     if(list && info){
@@ -164,6 +141,7 @@ class Home extends React.Component{
   }
 
   componentWillUnmount() {
+    this.timer && clearTimeout(this.timer);
     sessionStorage.setItem('videoList', JSON.stringify(this.state.videoList));
     sessionStorage.setItem('pageInfo', JSON.stringify({
       page: this.page,
@@ -174,10 +152,8 @@ class Home extends React.Component{
   }
 
   loadmore = ()=>{
-    const dom = (this.refs.app&&this.refs.app.getBoundingClientRect()) || {};
-    if(this.timer){
-      clearTimeout(this.timer);
-    }
+    const dom = this.refs.app.getBoundingClientRect();
+    this.timer && clearTimeout(this.timer);
     this.timer = setTimeout(()=>{
       // console.log(dom, -dom.top + 1000 , dom.height);
       if(-dom.top + 1000 > dom.height && !this.state.loading){
@@ -185,6 +161,15 @@ class Home extends React.Component{
         this.getVideoList();
       }
     },200);
+  }
+
+  refresh = ()=>{
+    this.page = 1;
+    this.maxtime = null;
+    this.setState({
+      videoList: []
+    });
+    this.getVideoList();
   }
 
   getVideoList = ()=>{
@@ -237,8 +222,8 @@ class Home extends React.Component{
 
   render () {
     return (
-      <div className={`app-home-page ${this.state.visible ? 'hidden' : ''}`}  ref="app">
-        <div className="more-loading" style={{ transform: this.state.movedis }}>
+      <div className={`app-home-page ${this.state.visible ? 'hidden' : ''}`} ref="app">
+        <div className={`more-loading ${this.state.loading ? 'loading' : ''}`} onClick={this.refresh}>
            <img src={ require('../../img/loadMore.png') } width="100%" alt=""/>
          </div>    
          <div className="home-header-cont flex-ad">
@@ -250,7 +235,7 @@ class Home extends React.Component{
               <Icon type="mail" style={{ fontSize: '5vw', color: '#fff' }}/>
               <Icon type="edit" style={{ fontSize: '5vw', color: '#fff' }}/>
          </div>
-         <Affix offsetTop={50}>
+         <Affix offsetTop={50} target={ ()=>this.refs.app }>
           <div className="loading-cont flex-center">
             <Spin spinning={this.state.loading} />
           </div>
@@ -268,7 +253,8 @@ class Home extends React.Component{
           <HeaderMenu 
           changeMenu={this.changeMenu}
           activeMenu={this.state.activeMenu}
-          menuList={this.state.menuList}/>
+          menuList={this.state.menuList}
+          target={this.refs.app}/>
           <Carousel autoplay>
             {
               this.state.bannerList.map(it=>{
