@@ -1,5 +1,8 @@
 $theme-color: #f95984;
 $boder-color: #ededed;
+.ant-drawer-content-wrapper{
+  touch-action: none;
+}
 .ant-drawer-header{
   background-color: $theme-color !important;
   border: none !important;

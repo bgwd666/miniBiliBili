@@ -4,6 +4,7 @@ import {  Icon, Avatar, Row, Col, Spin, Affix } from 'antd';
 import { withRouter } from 'react-router-dom'
 import AddComment from './addComment'
 import axios from 'axios';
+import dataFormat from './../../unit/dataFormat'
 
 
 class VideoDetails extends React.Component{
@@ -16,7 +17,8 @@ class VideoDetails extends React.Component{
       name: null,
       text: null,
       commentList: [],
-      loading:  false
+      loading:  false,
+      showCommentWrite: false
     };
     this.timer = null;
     this.page = 1;
@@ -92,6 +94,31 @@ class VideoDetails extends React.Component{
     })
   }
 
+  closeComment = ()=>{
+    this.setState({
+      showCommentWrite: false
+    })
+  }
+
+  addComment = (data)=>{
+    const now = dataFormat(new Date(), 'yyyy-MM-dd hh:mm:ss');
+    const newComment = {
+      id: Math.random()+'',
+      user: {
+        profile_image: '',
+        username: '我'
+      },
+      ctime: now,
+      content: data,
+      like_count: 0,
+    }
+    const list = [newComment, ...this.state.commentList]
+    this.setState({
+      showCommentWrite: false,
+      commentList: list
+    });
+  }
+
   render () {
     return (
       <div className="videoDetails-page" ref="video">
@@ -104,7 +131,7 @@ class VideoDetails extends React.Component{
           <span className="v-title">{ this.state.name }</span>
         </div>
         <video 
-        className="video" 
+        className={`video ${this.state.showCommentWrite &&'hidden' }`}
         autoPlay 
         src={ this.state.url } 
         controls 
@@ -146,7 +173,16 @@ class VideoDetails extends React.Component{
             }
           </div>
         </div>
-        <AddComment/>
+        {
+          this.state.showCommentWrite ?
+          <AddComment 
+          closeComment={ ()=>this.closeComment() }
+          addComment={ this.addComment }
+          /> : 
+          <div className="show-comment flex-center" onClick={ ()=> this.setState({ showCommentWrite: true }) }>
+            <div className="c-input flex-center">觉得不错说两句~</div>
+          </div>
+        }
       </div>
     );
   }
